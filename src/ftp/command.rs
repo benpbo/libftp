@@ -1,4 +1,4 @@
-use std::net::SocketAddr;
+use std::net::Ipv4Addr;
 
 // FTP commands according to RFC 959
 pub enum Command<'a> {
@@ -13,7 +13,7 @@ pub enum Command<'a> {
     Logout,
 
     // Transfer parameter
-    DataPort(SocketAddr),
+    DataPort(Ipv4Addr, u16),
     Passive,
     RepresentationType(RepresentationTypeKind),
     FileStructure(FileStructureKind),

@@ -1,4 +1,4 @@
-use std::net::{Ipv4Addr, SocketAddr};
+use std::net::Ipv4Addr;
 
 use nom::{
     branch::alt,
@@ -48,7 +48,10 @@ pub fn command(i: &[u8]) -> IResult<&[u8], Command> {
         // REIN <CRLF>
         b"REIN" => parse!(Command::Reinitialize),
         // PORT <SP> <host-port> <CRLF>
-        b"PORT" => parse!(Command::DataPort, host_port),
+        b"PORT" => parse!(
+            |(address, port)| Command::DataPort(address, port),
+            host_port
+        ),
         // PASV <CRLF>
         b"PASV" => parse!(Command::Passive),
         // TYPE <SP> <type-code> <CRLF>
@@ -206,9 +209,9 @@ fn byte_size(i: &[u8]) -> IResult<&[u8], u8> {
 }
 
 // <host-port> ::= <host-number>,<port-number>
-fn host_port(i: &[u8]) -> IResult<&[u8], SocketAddr> {
+fn host_port(i: &[u8]) -> IResult<&[u8], (Ipv4Addr, u16)> {
     let (i, (ip, port)) = pair(host_number, port_number)(i)?;
-    Ok((i, SocketAddr::from((ip, port))))
+    Ok((i, (ip, port)))
 }
 
 // <host-number> ::= <number>,<number>,<number>,<number>
