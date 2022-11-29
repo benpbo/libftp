@@ -24,9 +24,13 @@ pub fn command(i: &[u8]) -> IResult<&[u8], Command> {
             let (i, _) = crlf(i)?;
             Ok((i, $command))
         }};
+        ($command: expr, [$parser: expr]) => {{
+            let (i, parsed) = opt(delimited(space, $parser, crlf))(i)?;
+            Ok((i, $command(parsed.map(|value| value.into()))))
+        }};
         ($command: expr, $parser: expr) => {{
             let (i, parsed) = delimited(space, $parser, crlf)(i)?;
-            Ok((i, $command(parsed)))
+            Ok((i, $command(parsed.into())))
         }};
     }
 
@@ -97,17 +101,17 @@ pub fn command(i: &[u8]) -> IResult<&[u8], Command> {
         // PWD  <CRLF>
         b"PWD" => parse!(Command::PrintWorkingDirectory),
         // LIST [<SP> <pathname>] <CRLF>
-        b"LIST" => parse!(Command::List, opt(pathname)),
+        b"LIST" => parse!(Command::List, [pathname]),
         // NLST [<SP> <pathname>] <CRLF>
-        b"NLST" => parse!(Command::NameList, opt(pathname)),
+        b"NLST" => parse!(Command::NameList, [pathname]),
         // SITE <SP> <string> <CRLF>
         b"SITE" => parse!(Command::SiteParameters, string),
         // SYST <CRLF>
         b"SYST" => parse!(Command::System),
         // STAT [<SP> <pathname>] <CRLF>
-        b"STAT" => parse!(Command::Status, opt(pathname)),
+        b"STAT" => parse!(Command::Status, [pathname]),
         // HELP [<SP> <string>] <CRLF>
-        b"HELP" => parse!(Command::Help, opt(string)),
+        b"HELP" => parse!(Command::Help, [string]),
         // NOOP <CRLF>
         b"NOOP" => parse!(Command::Noop),
         _ => {

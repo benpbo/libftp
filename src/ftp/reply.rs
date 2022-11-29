@@ -1,14 +1,14 @@
-pub struct Reply<'a> {
-    pub code: &'a [u8],
-    pub text: Text<'a>,
+pub struct Reply {
+    pub code: [u8; 3],
+    pub text: Text,
 }
 
-pub enum Text<'a> {
+pub enum Text {
     SingleLine {
-        line: &'a [u8],
+        line: Vec<u8>,
     },
     MultiLine {
-        lines: Vec<&'a [u8]>,
-        last_line: &'a [u8],
+        lines: Vec<Vec<u8>>,
+        last_line: Vec<u8>,
     },
 }
