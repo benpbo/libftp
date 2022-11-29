@@ -1,6 +1,7 @@
 use std::net::Ipv4Addr;
 
 // FTP commands according to RFC 959
+#[derive(Debug)]
 pub enum Command {
     // Access control
     UserName(Vec<u8>),
@@ -42,12 +43,14 @@ pub enum Command {
     Noop,
 }
 
+#[derive(Debug)]
 pub enum FormatControl {
     NonPrint,
     Telnet,
     Carriage,
 }
 
+#[derive(Debug)]
 pub enum RepresentationTypeKind {
     Ascii(Option<FormatControl>),
     Ebcdic(Option<FormatControl>),
@@ -55,12 +58,14 @@ pub enum RepresentationTypeKind {
     LocalByte(u8),
 }
 
+#[derive(Debug)]
 pub enum FileStructureKind {
     File,
     Record,
     Page,
 }
 
+#[derive(Debug)]
 pub enum TransferModeKind {
     Stream,
     Block,
