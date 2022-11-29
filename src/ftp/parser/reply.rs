@@ -1,13 +1,13 @@
 use nom::{
     branch::alt,
     bytes::streaming::{tag, take, take_until},
-    character::streaming::{char, crlf},
+    character::streaming::char,
     multi::many_till,
     sequence::{pair, preceded, terminated, tuple},
     IResult,
 };
 
-use super::common::space;
+use super::common::{crlf, space};
 use crate::ftp::{Reply, Text};
 
 pub fn reply(i: &[u8]) -> IResult<&[u8], Reply> {

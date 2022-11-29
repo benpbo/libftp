@@ -3,14 +3,13 @@ use std::net::Ipv4Addr;
 use nom::{
     branch::alt,
     bytes::streaming::{tag_no_case, take_while1},
-    character::streaming::crlf,
     combinator::opt,
     number::streaming::u8,
     sequence::{delimited, pair, preceded, separated_pair, tuple},
     IResult,
 };
 
-use super::common::{comma, space};
+use super::common::{comma, crlf, space};
 use crate::ftp::{
     command::FormatControl, Command, FileStructureKind, RepresentationTypeKind, TransferModeKind,
 };
