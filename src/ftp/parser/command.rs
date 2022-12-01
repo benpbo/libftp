@@ -208,7 +208,7 @@ fn byte_size(i: &[u8]) -> IResult<&[u8], u8> {
 
 // <host-port> ::= <host-number>,<port-number>
 fn host_port(i: &[u8]) -> IResult<&[u8], (Ipv4Addr, u16)> {
-    let (i, (ip, port)) = pair(host_number, port_number)(i)?;
+    let (i, (ip, port)) = separated_pair(host_number, comma, port_number)(i)?;
     Ok((i, (ip, port)))
 }
 
