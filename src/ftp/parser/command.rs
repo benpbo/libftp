@@ -226,7 +226,7 @@ fn host_number(i: &[u8]) -> IResult<&[u8], Ipv4Addr> {
 // <port-number> ::= <number>,<number>
 fn port_number(i: &[u8]) -> IResult<&[u8], u16> {
     let (i, (a, b)) = separated_pair(number, comma, number)(i)?;
-    Ok((i, u16::from_ne_bytes([a, b])))
+    Ok((i, u16::from_be_bytes([a, b])))
 }
 
 // <number> ::= any decimal integer 1 through 255
