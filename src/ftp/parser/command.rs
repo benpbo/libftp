@@ -325,34 +325,38 @@ mod tests {
 
     use super::{command, number, port_number};
 
+    macro_rules! test_parser_success {
+        ($input: literal, $parser: expr, $expected_output: expr, $unparsed: literal) => {
+            let result = $parser($input);
+
+            assert_eq!(result, Ok((&$unparsed[..], $expected_output)));
+        };
+        ($input: literal, $parser: expr, $expected_output: expr) => {
+            test_parser_success!($input, $parser, $expected_output, b"");
+        };
+    }
+
     #[test]
     fn test_list_command_without_path() {
-        let result = command(b"LIST\r\n");
-
-        assert_eq!(result, Ok((&b""[..], Command::List(None))));
+        test_parser_success!(b"LIST\r\n", command, Command::List(None));
     }
 
     #[test]
     fn test_list_command_with_path() {
-        let result = command(b"LIST /test/path\r\n");
-
-        assert_eq!(
-            result,
-            Ok((&b""[..], Command::List(Some(b"/test/path".to_vec()))))
+        test_parser_success!(
+            b"LIST /test/path\r\n",
+            command,
+            Command::List(Some(b"/test/path".to_vec()))
         );
     }
 
     #[test]
     fn test_port() {
-        let result = port_number(b"132,219\r\n");
-
-        assert_eq!(result, Ok((&b"\r\n"[..], 34011)));
+        test_parser_success!(b"132,219\r\n", port_number, 34011, b"\r\n");
     }
 
     #[test]
     fn test_number() {
-        let result = number(b"137,");
-
-        assert_eq!(result, Ok((&b","[..], 137)));
+        test_parser_success!(b"137,", number, 137, b",");
     }
 }
