@@ -337,6 +337,15 @@ mod tests {
     }
 
     #[test]
+    fn test_user_command() {
+        test_parser_success!(
+            b"USER test-user\r\n",
+            command,
+            Command::UserName(b"test-user".to_vec())
+        );
+    }
+
+    #[test]
     fn test_list_command_without_path() {
         test_parser_success!(b"LIST\r\n", command, Command::List(None));
     }
