@@ -321,6 +321,11 @@ fn decimal_integer(i: &[u8]) -> IResult<&[u8], i64> {
 
 #[cfg(test)]
 mod tests {
+    use nom::{
+        error::{Error, ErrorKind},
+        Err,
+    };
+
     use crate::ftp::Command;
 
     use super::{command, number, port_number};
@@ -334,6 +339,38 @@ mod tests {
         ($input: literal, $parser: expr, $expected_output: expr) => {
             test_parser_success!($input, $parser, $expected_output, b"");
         };
+    }
+
+    macro_rules! test_parser_error {
+        ($input: literal, $parser: expr, $expected_code: expr) => {
+            let result = $parser($input);
+            let expected: Result<(&[u8], Command), Err<Error<&[u8]>>> = Err(Err::Error(Error {
+                input: $input,
+                code: $expected_code,
+            }));
+
+            assert_eq!(result, expected);
+        };
+    }
+
+    #[test]
+    fn test_non_existent_1_letter_command() {
+        test_parser_error!(b"Z", command, ErrorKind::Tag);
+    }
+
+    #[test]
+    fn test_non_existent_2_letter_command() {
+        test_parser_error!(b"AA", command, ErrorKind::Tag);
+    }
+
+    #[test]
+    fn test_non_existent_3_letter_command() {
+        test_parser_error!(b"ABC", command, ErrorKind::Tag);
+    }
+
+    #[test]
+    fn test_non_existent_4_letter_command() {
+        test_parser_error!(b"ABCD", command, ErrorKind::Tag);
     }
 
     #[test]
