@@ -18,20 +18,16 @@ impl Serializeable for (Ipv4Addr, u16) {
         let (address, port) = self;
 
         // Serialize address
-        let [a, b, c, d] = address.octets();
-        for byte in [a, b, c] {
-            writer.write_all(byte.to_string().as_bytes())?;
-            writer.write_all(b",")?;
+        for octet in address.octets() {
+            octet.serialize(writer)?;
+            b",".serialize(writer)?;
         }
-
-        writer.write_all(d.to_string().as_bytes())?;
-
-        // Seperator
-        writer.write_all(b",")?;
 
         // Serialize port
         let [a, b] = port.to_be_bytes();
-        writer.write_all(&[a, b',', b])
+        a.serialize(writer)?;
+        b",".serialize(writer)?;
+        b.serialize(writer)
     }
 }
 
@@ -115,7 +111,7 @@ impl Serializeable for i64 {
     where
         W: Write,
     {
-        self.to_be_bytes().serialize(writer)
+        self.to_string().as_bytes().serialize(writer)
     }
 }
 
@@ -124,7 +120,7 @@ impl Serializeable for u8 {
     where
         W: Write,
     {
-        self.to_be_bytes().serialize(writer)
+        self.to_string().as_bytes().serialize(writer)
     }
 }
 
