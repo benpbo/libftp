@@ -5,7 +5,7 @@ use nom::{
     bytes::streaming::{tag_no_case, take_while1},
     character::streaming::u8,
     combinator::opt,
-    sequence::{delimited, pair, preceded, separated_pair, tuple},
+    sequence::{delimited, pair, preceded, separated_pair, terminated, tuple},
     IResult,
 };
 
@@ -24,7 +24,7 @@ pub fn command(i: &[u8]) -> IResult<&[u8], Command> {
             Ok((i, $command))
         }};
         ($command: expr, [$parser: expr]) => {{
-            let (i, parsed) = opt(delimited(space, $parser, crlf))(i)?;
+            let (i, parsed) = terminated(opt(preceded(space, $parser)), crlf)(i)?;
             Ok((i, $command(parsed.map(|value| value.into()))))
         }};
         ($command: expr, $parser: expr) => {{
