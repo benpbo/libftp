@@ -318,3 +318,41 @@ fn pathname(i: &[u8]) -> IResult<&[u8], &[u8]> {
 fn decimal_integer(i: &[u8]) -> IResult<&[u8], i64> {
     nom::number::streaming::be_i64(i)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::ftp::Command;
+
+    use super::{command, number, port_number};
+
+    #[test]
+    fn test_list_command_without_path() {
+        let result = command(b"LIST\r\n");
+
+        assert_eq!(result, Ok((&b""[..], Command::List(None))));
+    }
+
+    #[test]
+    fn test_list_command_with_path() {
+        let result = command(b"LIST /test/path\r\n");
+
+        assert_eq!(
+            result,
+            Ok((&b""[..], Command::List(Some(b"/test/path".to_vec()))))
+        );
+    }
+
+    #[test]
+    fn test_port() {
+        let result = port_number(b"132,219\r\n");
+
+        assert_eq!(result, Ok((&b"\r\n"[..], 34011)));
+    }
+
+    #[test]
+    fn test_number() {
+        let result = number(b"137,");
+
+        assert_eq!(result, Ok((&b","[..], 137)));
+    }
+}
