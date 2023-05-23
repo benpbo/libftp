@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::ftp::Command;
+use crate::command::Command;
 
 use super::serializeable::Serializeable;
 use super::Serializer;

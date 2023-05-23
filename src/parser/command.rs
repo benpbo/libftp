@@ -10,8 +10,8 @@ use nom::{
 };
 
 use super::common::{comma, crlf, space};
-use crate::ftp::{
-    command::FormatControl, Command, FileStructureKind, RepresentationTypeKind, TransferModeKind,
+use crate::command::{
+    FormatControl, Command, FileStructureKind, RepresentationTypeKind, TransferModeKind,
 };
 
 pub fn command(i: &[u8]) -> IResult<&[u8], Command> {
@@ -326,7 +326,7 @@ mod tests {
         Err,
     };
 
-    use crate::ftp::Command;
+    use crate::command::Command;
 
     use super::{command, number, port_number};
 

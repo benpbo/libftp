@@ -1,16 +1,13 @@
-mod ftp;
-
 use std::{
-    env::args,
     io::{BufReader, BufWriter, Read},
-    net::{SocketAddr, TcpListener, TcpStream, ToSocketAddrs},
+    net::{SocketAddr, TcpStream},
     thread::spawn,
 };
 
-use ftp::serializer::Serializer;
+use crate::serializer::Serializer;
 use nom::{IResult, Needed};
 
-use crate::ftp::{
+use crate::{
     parser::{parse_command, parse_reply},
     serializer::CommandSerializer,
     serializer::ReplySerializer,
@@ -18,35 +15,7 @@ use crate::ftp::{
 
 const BUFFER_SIZE: usize = 1024 * 16;
 
-fn main() -> std::io::Result<()> {
-    // Parse arguments.
-    let upstream_target = args()
-        .nth(1)
-        .expect("First argument to contain the upstream address")
-        .to_socket_addrs()?
-        .nth(0)
-        .unwrap();
-
-    let listening_addr = args()
-        .nth(2)
-        .expect("Second argument to contain the address to listen on")
-        .to_socket_addrs()?
-        .nth(0)
-        .unwrap();
-
-    // Listen for connections
-    let listener = TcpListener::bind(listening_addr)?;
-
-    for downstream in listener.incoming() {
-        if let Ok(downstream) = downstream {
-            spawn(move || proxy_connection(downstream, &upstream_target));
-        }
-    }
-
-    Ok(())
-}
-
-fn proxy_connection(downstream: TcpStream, target: &SocketAddr) -> std::io::Result<()> {
+pub fn proxy_connection(downstream: TcpStream, target: &SocketAddr) -> std::io::Result<()> {
     let upstream = TcpStream::connect(target)?;
 
     let (downstream_reader, downstream_writer) = tcp_stream_pair(downstream)?;

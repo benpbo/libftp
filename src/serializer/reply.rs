@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use crate::ftp::{Reply, Text};
+use crate::reply::{Reply, Text};
 
 use super::Serializer;
 

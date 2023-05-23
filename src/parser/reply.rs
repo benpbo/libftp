@@ -8,7 +8,7 @@ use nom::{
 };
 
 use super::common::{crlf, space};
-use crate::ftp::{Reply, Text};
+use crate::reply::{Reply, Text};
 
 pub fn reply(i: &[u8]) -> IResult<&[u8], Reply> {
     let (i, (code, seperator, first_line)) = tuple((code, alt((space, hyphen)), text_line))(i)?;

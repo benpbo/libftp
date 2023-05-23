@@ -1,7 +1,7 @@
 use std::{io::Write, net::Ipv4Addr};
 
-use crate::ftp::{
-    command::FormatControl, FileStructureKind, RepresentationTypeKind, TransferModeKind,
+use crate::command::{
+    FormatControl, FileStructureKind, RepresentationTypeKind, TransferModeKind,
 };
 
 pub trait Serializeable {
