@@ -6,9 +6,10 @@ libftp is a crate implementing the file transfer protocol (FTP) in Rust. The cra
 - [ ] FTP client.
 - [ ] FTP server.
 
-## Contributing
+## About The Project
 
-Feel free to point out bugs, performance issues, difficult to use APIs, request missing features and contribute your own code! This is a passion project of mine that I want to grow and I make a viable FTP utilities crate.
+This is a passion project of mine that I want to grow and I make a viable FTP utilities crate.
+Feel free to point out bugs, performance issues, difficult to use APIs, request missing features and contribute your own code! 
 
 ## License
 
