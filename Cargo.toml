@@ -1,13 +1,6 @@
-[package]
-name = "libftp"
-version = "0.1.0"
-edition = "2021"
-authors = ["Ben Prize Bar-On <prizeben@gmail.com>"]
-description = "A Rust crate for working with the FTP protocol."
-repository = "https://github.com/benpbo/libftp"
-license = "MIT OR Apache-2.0"
-keywords = ["ftp", "network-protocol", "parser"]
-categories = ["network-programming", "parser-implementations"]
+[workspace]
 
-[dependencies]
-nom = "7.1"
+members = [
+  "ftp",
+  "proxy"
+]
