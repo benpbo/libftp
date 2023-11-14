@@ -2,5 +2,6 @@
 
 members = [
   "ftp",
+  "client",
   "proxy"
 ]
