@@ -4,10 +4,10 @@ use std::{
     thread::spawn,
 };
 
-use crate::serializer::Serializer;
 use nom::{IResult, Needed};
 
-use crate::{
+use libftp::serializer::Serializer;
+use libftp::{
     parser::{parse_command, parse_reply},
     serializer::CommandSerializer,
     serializer::ReplySerializer,
