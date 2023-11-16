@@ -112,6 +112,10 @@ dependencies = [
 [[package]]
 name = "libftp-client"
 version = "0.1.0"
+dependencies = [
+ "libftp",
+ "nom",
+]
 
 [[package]]
 name = "libftp-proxy"
