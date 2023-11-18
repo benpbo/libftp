@@ -62,9 +62,14 @@ where
     let mut buffer = [0u8; BUFFER_SIZE];
     let mut buffer_index = 0;
     loop {
-        parse_stream(&mut buffer, &mut buffer_index, &mut reader, &parser)
+        break match parse_stream(&mut buffer, &mut buffer_index, &mut reader, &parser)
             .and_then(|parsed| Ok(hook(parsed)))
-            .and_then(|parsed| serializer.serialize(&parsed))?;
+            .and_then(|parsed| serializer.serialize(&parsed))
+        {
+            Ok(()) => continue,
+            Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => Ok(()),
+            Err(e) => Err(e),
+        }
     }
 }
 
