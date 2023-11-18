@@ -1,8 +1,6 @@
 use std::{io::Write, net::Ipv4Addr};
 
-use crate::command::{
-    FormatControl, FileStructureKind, RepresentationTypeKind, TransferModeKind,
-};
+use crate::command::{FileStructureKind, FormatControl, RepresentationTypeKind, TransferModeKind};
 
 pub trait Serializeable {
     fn serialize<W>(&self, writer: &mut W) -> std::io::Result<()>
