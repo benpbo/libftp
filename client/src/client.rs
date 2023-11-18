@@ -2,6 +2,7 @@ use std::io::{BufRead, BufReader};
 use std::net::{SocketAddr, TcpStream};
 use std::num::NonZeroUsize;
 
+use libftp::reply::Text;
 use libftp::{parser::parse_reply, reply::Reply};
 use nom;
 
@@ -25,15 +26,15 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn connect(addr: &SocketAddr) -> Result<Self, ClientError> {
+    pub fn connect(addr: &SocketAddr) -> Result<(Self, Text), ClientError> {
         let stream = TcpStream::connect(addr).map_err(|err| ClientError::Io(err))?;
         let reader = BufReader::new(stream);
         let mut instance = Self { data: reader };
 
         let reply = instance.read_reply()?;
         match reply.code {
-            [b'1', b'2', b'0'] => todo!("Parse 'nnn' minutes from response"),
-            [b'2', b'2', b'0'] => Ok(instance),
+            [b'1', b'2', b'0'] => Err(ClientError::NotReady(reply)),
+            [b'2', b'2', b'0'] => Ok((instance, reply.text)),
             [b'4', b'2', b'1'] => Err(ClientError::ServiceNotAvailable),
             _ => Err(ClientError::UnexpectedReply(reply)),
         }
