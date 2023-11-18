@@ -69,7 +69,7 @@ where
             Ok(()) => continue,
             Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => Ok(()),
             Err(e) => Err(e),
-        }
+        };
     }
 }
 

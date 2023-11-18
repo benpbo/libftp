@@ -11,7 +11,7 @@ use nom::{
 
 use super::common::{comma, crlf, space};
 use crate::command::{
-    FormatControl, Command, FileStructureKind, RepresentationTypeKind, TransferModeKind,
+    Command, FileStructureKind, FormatControl, RepresentationTypeKind, TransferModeKind,
 };
 
 pub fn command(i: &[u8]) -> IResult<&[u8], Command> {
