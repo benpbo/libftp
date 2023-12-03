@@ -2,21 +2,25 @@ use std::io::{BufRead, BufReader};
 use std::net::{SocketAddr, TcpStream};
 use std::num::NonZeroUsize;
 
+use libftp::command::Command;
 use libftp::reply::Text;
+use libftp::serializer::{CommandSerializer, Serializer};
 use libftp::{parser::parse_reply, reply::Reply};
 use nom;
 
 type ClientResult<T, E> = Result<T, ClientError<E>>;
 
 pub struct Client {
-    data: BufReader<TcpStream>,
+    reader: BufReader<TcpStream>,
+    writer: CommandSerializer<TcpStream>,
 }
 
 impl Client {
     pub fn connect(addr: &SocketAddr) -> ClientResult<(Self, Text), ConnectionErrorReplyCode> {
         let stream = TcpStream::connect(addr).map_err(|err| ClientError::Connection(err))?;
-        let reader = BufReader::new(stream);
-        let mut instance = Self { data: reader };
+        let (reader, writer) =
+            Client::read_write_pair(stream).map_err(|err| ClientError::Connection(err))?;
+        let mut instance = Self { reader, writer };
 
         let reply = instance.read_reply()?;
         return match reply.code {
@@ -33,10 +37,34 @@ impl Client {
         };
     }
 
+    pub fn login(&mut self, username: &str) -> ClientResult<Text, LoginErrorReplyCode> {
+        let user = Command::UserName(username.into());
+        self.writer
+            .serialize(&user)
+            .map_err(|err| ClientWriteError::Io(err))?;
+
+        let reply = self.read_reply()?;
+        match reply.code {
+            [b'2', b'3', b'0'] => Ok(reply.text),
+            [b'5', b'3', b'0'] => Err(ClientError::Reply {
+                code: LoginErrorReplyCode::NotLoggedIn,
+                text: reply.text,
+            }),
+            _ => Err(ClientReadError::UnexpectedReply(reply).into()),
+        }
+    }
+
+    fn read_write_pair(
+        stream: TcpStream,
+    ) -> std::io::Result<(BufReader<TcpStream>, CommandSerializer<TcpStream>)> {
+        let cloned = stream.try_clone()?;
+        Ok((BufReader::new(stream), CommandSerializer::new(cloned)))
+    }
+
     fn read_reply(&mut self) -> Result<Reply, ClientReadError> {
         let (consumed, reply) = {
             let buffer = self
-                .data
+                .reader
                 .fill_buf()
                 .map_err(|err| ClientReadError::Io(err))?;
             let (unparsed, reply) = parse_reply(buffer).map_err(|err| match err {
@@ -51,7 +79,7 @@ impl Client {
             (buffer.len() - unparsed.len(), reply)
         };
 
-        self.data.consume(consumed);
+        self.reader.consume(consumed);
 
         Ok(reply)
     }
@@ -61,6 +89,11 @@ impl Client {
 pub enum ConnectionErrorReplyCode {
     NotReady = 120,
     NotAvailable = 421,
+}
+
+#[derive(Debug)]
+pub enum LoginErrorReplyCode {
+    NotLoggedIn = 530,
 }
 
 #[derive(Debug)]
@@ -93,7 +126,6 @@ impl<C> From<ClientReadError> for ClientError<C> {
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub enum ClientWriteError {
     // An IO error occured while writing a command

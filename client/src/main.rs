@@ -1,7 +1,7 @@
 use clap::Parser;
 use client::Client;
 use libftp::reply::Text;
-use std::net::SocketAddr;
+use std::{io::Write, net::SocketAddr};
 
 mod client;
 
@@ -13,7 +13,7 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    let _client = match Client::connect(&args.host) {
+    let mut client = match Client::connect(&args.host) {
         Ok((client, text)) => {
             print_text(text);
             client
@@ -27,6 +27,19 @@ fn main() {
             return;
         }
     };
+
+    print!("User: ");
+    std::io::stdout().flush().unwrap();
+    let stdin = std::io::stdin();
+    let username = {
+        let mut input = String::new();
+        stdin.read_line(&mut input).unwrap();
+        input
+    };
+
+    let login_text = client.login(&username).unwrap();
+    println!("Logged in as {username}");
+    print_text(login_text);
 }
 
 fn print_text(text: Text) {
