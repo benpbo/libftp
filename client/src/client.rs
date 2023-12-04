@@ -1,6 +1,5 @@
 use std::io::{BufRead, BufReader};
 use std::net::{SocketAddr, TcpStream};
-use std::num::NonZeroUsize;
 
 use libftp::command::Command;
 use libftp::reply::Text;
@@ -62,26 +61,28 @@ impl Client {
     }
 
     fn read_reply(&mut self) -> Result<Reply, ClientReadError> {
-        let (consumed, reply) = {
-            let buffer = self
-                .reader
-                .fill_buf()
-                .map_err(|err| ClientReadError::Io(err))?;
-            let (unparsed, reply) = parse_reply(buffer).map_err(|err| match err {
-                nom::Err::Incomplete(needed) => ClientReadError::BufferTooSmall(match needed {
-                    nom::Needed::Unknown => None,
-                    nom::Needed::Size(size) => Some(size),
-                }),
-                nom::Err::Error(inner) => ClientReadError::InvalidReply(inner.input.to_vec()),
-                nom::Err::Failure(inner) => ClientReadError::InvalidReply(inner.input.to_vec()),
-            })?;
+        let mut reply_buffer: Vec<u8> = Vec::new();
+        loop {
+            let read_amount = {
+                let buffer = self.reader.fill_buf()?;
+                reply_buffer.extend_from_slice(buffer);
+                buffer.len()
+            };
 
-            (buffer.len() - unparsed.len(), reply)
-        };
-
-        self.reader.consume(consumed);
-
-        Ok(reply)
+            return match parse_reply(&reply_buffer) {
+                Ok((unparsed, reply)) => {
+                    self.reader.consume(read_amount - unparsed.len());
+                    Ok(reply)
+                }
+                Err(nom::Err::Incomplete(_)) => {
+                    self.reader.consume(read_amount);
+                    continue;
+                }
+                Err(nom::Err::Error(inner) | nom::Err::Failure(inner)) => {
+                    Err(ClientReadError::InvalidReply(inner.input.into()))
+                }
+            };
+        }
     }
 }
 
@@ -114,8 +115,6 @@ pub enum ClientReadError {
     UnexpectedReply(Reply),
     // Received an invalid reply from the server
     InvalidReply(Vec<u8>),
-    // Client's internal buffer is to small to read the full response
-    BufferTooSmall(Option<NonZeroUsize>),
     // An IO error occured while reading a reply
     Io(std::io::Error),
 }
@@ -123,6 +122,12 @@ pub enum ClientReadError {
 impl<C> From<ClientReadError> for ClientError<C> {
     fn from(v: ClientReadError) -> Self {
         ClientError::Read(v)
+    }
+}
+
+impl From<std::io::Error> for ClientReadError {
+    fn from(value: std::io::Error) -> Self {
+        ClientReadError::Io(value)
     }
 }
 
