@@ -45,6 +45,14 @@ impl Client {
         let reply = self.read_reply()?;
         match reply.code {
             [b'2', b'3', b'0'] => Ok(reply.text),
+            [b'3', b'3', b'1'] => Err(ClientError::Reply {
+                code: LoginErrorReplyCode::RequirePassword,
+                text: reply.text,
+            }),
+            [b'3', b'3', b'2'] => Err(ClientError::Reply {
+                code: LoginErrorReplyCode::RequireAccount,
+                text: reply.text,
+            }),
             [b'5', b'3', b'0'] => Err(ClientError::Reply {
                 code: LoginErrorReplyCode::NotLoggedIn,
                 text: reply.text,
@@ -94,6 +102,8 @@ pub enum ConnectionErrorReplyCode {
 
 #[derive(Debug)]
 pub enum LoginErrorReplyCode {
+    RequirePassword = 331,
+    RequireAccount = 332,
     NotLoggedIn = 530,
 }
 
