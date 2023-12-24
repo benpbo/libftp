@@ -61,6 +61,57 @@ impl Client {
         }
     }
 
+    pub fn login_with_password(
+        &mut self,
+        username: &str,
+        password: &str,
+    ) -> ClientResult<Text, LoginWithPasswordErrorReplyCode> {
+        match self.login(username) {
+            Err(ClientError::Reply {
+                code: LoginErrorReplyCode::RequirePassword,
+                ..
+            }) => (),
+            Ok(text) => return Ok(text),
+            Err(ClientError::Reply { code, text }) => match code {
+                LoginErrorReplyCode::RequirePassword => (),
+                LoginErrorReplyCode::RequireAccount => {
+                    return Err(ClientError::Reply {
+                        code: LoginWithPasswordErrorReplyCode::RequireAccount,
+                        text,
+                    })
+                }
+                LoginErrorReplyCode::NotLoggedIn => {
+                    return Err(ClientError::Reply {
+                        code: LoginWithPasswordErrorReplyCode::NotLoggedIn,
+                        text,
+                    })
+                }
+            },
+            Err(ClientError::Read(e)) => return Err(ClientError::Read(e)),
+            Err(ClientError::Write(e)) => return Err(ClientError::Write(e)),
+            Err(ClientError::Connection(e)) => return Err(ClientError::Connection(e)),
+        }
+
+        let password = Command::Password(password.into());
+        self.writer
+            .serialize(&password)
+            .map_err(|err| ClientWriteError::Io(err))?;
+
+        let reply = self.read_reply()?;
+        match reply.code {
+            [b'2', b'3', b'0'] => Ok(reply.text),
+            [b'3', b'3', b'2'] => Err(ClientError::Reply {
+                code: LoginWithPasswordErrorReplyCode::RequireAccount,
+                text: reply.text,
+            }),
+            [b'5', b'3', b'0'] => Err(ClientError::Reply {
+                code: LoginWithPasswordErrorReplyCode::NotLoggedIn,
+                text: reply.text,
+            }),
+            _ => Err(ClientReadError::UnexpectedReply(reply).into()),
+        }
+    }
+
     fn read_write_pair(
         stream: TcpStream,
     ) -> std::io::Result<(BufReader<TcpStream>, CommandSerializer<TcpStream>)> {
@@ -103,6 +154,13 @@ pub enum ConnectionErrorReplyCode {
 #[derive(Debug)]
 pub enum LoginErrorReplyCode {
     RequirePassword = 331,
+    RequireAccount = 332,
+    NotLoggedIn = 530,
+}
+
+#[derive(Debug)]
+pub enum LoginWithPasswordErrorReplyCode {
+    NotImplemented = 202,
     RequireAccount = 332,
     NotLoggedIn = 530,
 }
